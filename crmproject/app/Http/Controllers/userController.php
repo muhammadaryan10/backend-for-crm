@@ -232,6 +232,13 @@ class userController extends Controller
         // }
         $data = User::where('registeration_no',$reg_no)
         ->first();
+        if(!$data){
+            return response()->json([
+                'success'=>false,
+                'messsage'=>'Data not found',
+                'data'=>null
+            ], 200, );
+        }
         $data_1 = Technicaldetails::where('client_code', $data->id)->first();
         $data_2 = secutitydetails::where('client_code', $data->id)->first();
         $vas = explode(', ', $data->vas_options);
