@@ -220,17 +220,17 @@ class userController extends Controller
         User::destroy($id);
         return back();
     }
-    public function edit(Request $request){
-        $validator=Validator::make($request->all(),[
-            'reg_no'=>'required'
-        ]);
-        if($validator->fails()){
-            return response()->json([
-                'success'=>false,
-                'message'=>$validator->errors()
-            ], 200, );
-        }
-        $data = User::where('registeration_no',$request->reg_no)
+    public function edit($reg_no){
+        // $validator=Validator::make($request->all(),[
+        //     'reg_no'=>'required'
+        // ]);
+        // if($validator->fails()){
+        //     return response()->json([
+        //         'success'=>false,
+        //         'message'=>$validator->errors()
+        //     ], 200, );
+        // }
+        $data = User::where('registeration_no',$reg_no)
         ->first();
         $data_1 = Technicaldetails::where('client_code', $data->id)->first();
         $data_2 = secutitydetails::where('client_code', $data->id)->first();
