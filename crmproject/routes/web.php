@@ -31,9 +31,9 @@ Route::get('/home2', function () {
 Route::get('/home3', function () {
     return view('home3');
 })->name('home3');
-Route::get('/user', function () {
-    return view('userdetails');
-})->name('user');
+// Route::get('/user', function () {
+//     return view('userdetails');
+// })->name('user');
 // Route::get('/user', [userController::class, 'user'])->name('user');
 Route::get('personal/{id}', [userController::class, 'single'])->name('personal');
 Route::get('further/{id}', [userController::class, 'furtherdetails'])->name('further');
@@ -48,7 +48,7 @@ Route::get('securityalert', [userController::class, 'securityalert'])->name('sec
  Route::get('alert', [userController::class, 'alert'])->name('alert');
 
 Route::get('delete/{id}', [userController::class, 'delete'])->name('delete');
-Route::get('edit/{id}', [userController::class, 'edit'])->name('edit');
+// Route::get('edit/{id}', [userController::class, 'edit'])->name('edit');
 
 // Route::get('/alluser', function () {
 //     return view('alluser');
@@ -68,7 +68,7 @@ Route::post('/devicecreate', [userController::class,  'create_inventory']);
 
 Route::put('/updateall/{id}', [userController::class, 'update_details'])->name('updateall');
 Route::post('/createcomplain', [userController::class, 'create_complain'])->name('createcomplain');
-Route::post('/createremoval', [userController::class, 'create_removal'])->name('createremoval');
+// Route::post('/createremoval', [userController::class, 'create_removal'])->name('createremoval');
 Route::post('/creatertransfer', [userController::class, 'create_transfer'])->name('creatertransfer');
 Route::post('/createrownership', [userController::class, 'ownership_create'])->name('createrownership');
 Route::post('/create_soldout', [userController::class, 'create_soldout'])->name('create_soldout');
@@ -96,7 +96,7 @@ Route::post('/update_device', [userController::class, 'update_device'])->name('u
 Route::get('/singlecomplain/{complain_id}', [userController::class, 'single_complain'])->name('singlecomplain');
 Route::get('/reguserdata', [userController::class, 'reguserdata'])->name('reguserdata');
 Route::get('/removal', [userController::class, 'removalForm'])->name('removal');
-Route::get('/data', [userController::class, 'removal_create'])->name('data');
+// Route::get('/data', [userController::class, 'removal_create'])->name('data');
 Route::get('/dataa', [userController::class, 'removalate'])->name('dataa');
 
 Route::get('/complainLogs/{regNo}', [userController::class, 'complainLogs'])->name('complainlogs');

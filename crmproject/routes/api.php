@@ -64,3 +64,8 @@ Route::post('/editprofile', [userController::class, 'editprofile'])->name('editp
 Route::post('/empLogin', [userController::class, 'emp_login'])->name('empLogin');
 Route::post('/storedata', [userController::class,  'storedata'])->name('storedata');
 Route::get('/user', [userController::class, 'user'])->name('user');
+Route::post('/removal_search', [userController::class, 'removal_search'])->name('removal_search');
+Route::post('/createremoval', [userController::class, 'create_removal'])->name('createremoval');
+Route::post('edit', [userController::class, 'edit'])->name('edit');
+Route::post('test_api', [userController::class, 'test_api'])->name('test_api');
+Route::post('service_order_form', [userController::class, 'service_order_form'])->name('service_order_form');

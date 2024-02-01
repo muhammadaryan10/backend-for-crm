@@ -141,7 +141,7 @@ class userController extends Controller
             'color' => 'required',
             'insurance_partner' => 'required',
             'vas' => 'required', // Assuming this is a required field
-            // 'vas_options' => 'required|array',
+            'vas_options' => 'nullable',
             'segment' => 'nullable',
             'demo_duration' => 'required', // Assuming this is a required field
             'tracker_charges' => 'required',
@@ -180,7 +180,7 @@ class userController extends Controller
     
             $renewals = Renewals::create([
                 'client_id' => $data->id,
-                'login_id' => $request->cookie('em_loginid'), // Assuming this is the correct way to get empId
+                // 'login_id' => $request->cookie('em_loginid'), // Assuming this is the correct way to get empId
                 'renewal_charges' => $request->renewal_charges,
                 'reg_no' => $request->registeration_no,
                 'customer_name' => $request->customer_name,
@@ -196,9 +196,10 @@ class userController extends Controller
                 'users-data'=>$data,
             ], 200);
         } catch (\Exception $e) {
-            echo $e->getMessage();
+            $error= $e->getMessage();
             DB::rollback();
-            return response()->json(['message' => 'Internal server error'], 500);
+            return response()->json(['message' => 'Internal server error',
+        'error'=>$error,], 420);
         }
     }
     
@@ -219,19 +220,31 @@ class userController extends Controller
         User::destroy($id);
         return back();
     }
-    public function edit($id){
-        $data = User::find($id);
-        $data_1 = Technicaldetails::where('client_code', $id)->first();
-        $data_2 = secutitydetails::where('client_code', $id)->first();
+    public function edit(Request $request){
+        $validator=Validator::make($request->all(),[
+            'reg_no'=>'required'
+        ]);
+        if($validator->fails()){
+            return response()->json([
+                'success'=>false,
+                'message'=>$validator->errors()
+            ], 200, );
+        }
+        $data = User::where('registeration_no',$request->reg_no)
+        ->first();
+        $data_1 = Technicaldetails::where('client_code', $data->id)->first();
+        $data_2 = secutitydetails::where('client_code', $data->id)->first();
         $vas = explode(', ', $data->vas_options);
 
-        return view('editform', [
-            'id' => $id,
-            'data' => $data,
-            'vas' => $vas,
-            'data_1' => $data_1,
-            'data_2' => $data_2,
-        ]);
+   return response()->json([
+    'success'=>true,
+    'message'=>'Data found successfully',
+    'user'=>$data,
+    'technical'=>$data_1,
+    'security'=>$data_2,
+    'vas'=>$vas
+
+   ], 200, );
     }
 
     public function single($id){
@@ -550,10 +563,40 @@ if ($client_value && $device) {
         return view('removal', compact('lastComplaintId', 'empid'));
     }
     public function create_removal(Request $request){
-    $removal= Removal::where('reg_no',$request->reg_no)->first();
+     $validator=Validator::make($request->all(),[
+        'id'=>'required',
+        'reg_no' => 'required|exists:users,registeration_no',
+        'client_id' => 'required',
+        'customer_name' => 'required',
+        'sales_per' => 'required',
+        'make' => 'required',
+        'model' => 'required',
+        'color' => 'required',
+        'device' => 'required',
+        'eng_no' => 'required',
+        'chasis' => 'required',
+        'contact_no' => 'required',
+        'install_loc' => 'required',
+        'install_date' => 'required|date',
+        'remarks' => 'required',
+     ]);
+
+     if($validator->fails()){
+        return response()->json([
+            'success'=>false,
+            'message'=>'validations error',
+            'error'=>$validator->errors()
+        ], 402, );
+     }
+    $removal= Removal::where('reg_no',$request->reg_no)
+    ->first();
     if($removal)
      {
-        return response()->json(['message' => 'Registration number already exists'], 400);
+        return response()->json([
+            'success'=>false,
+            'message' => 'Removal already done',
+        'data'=>null]
+        , 420);
     }
 
         $data = new Removal();
@@ -576,9 +619,13 @@ if ($client_value && $device) {
         $data->status = 'Removed';
         $data->save();
         $check=Deviceinventory::where('device_serialno',$request->device)->first()
-        ->update(['status'=>'active']);
+        ->update(['status'=>'Removed']);
 
-        return response()->json('Removal created successfully', 200, );
+        return response()->json([
+            'success'=>true,
+            'message' => 'Removal created successfully',
+        'data'=>$data
+    ], 200);
     }
 
     public function action_complain(Request $request){
@@ -841,8 +888,20 @@ public function getDeviceSerialNumbers(Request $request)
 
     return response()->json($deviceSerialNumbers);
 }
-public function removal_create(Request $request){
-    $regNo = $request->input('search_term');
+public function removal_search(Request $request){
+    $validator=validator::make($request->all(),
+    [
+       'search_term'=>'required'
+    ]);
+ 
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Validation error',
+            'errors' => $validator->errors(),
+        ], 422);
+    }
+    $regNo = $request->search_term;
 
      $user = User::where('registeration_no', $regNo)
      ->orWhere('customer_name','LIKE',"%$regNo%")
@@ -851,16 +910,28 @@ public function removal_create(Request $request){
      ->OrderBy('created_at','desc')
      ->first();
      if (!$user) {
-        return redirect()->back()->with('error', 'Data not found.');
+        // return redirect()->back()->with('error', 'Data not found.');
+        return response()->json([
+            'success'=>false,
+            'message'=>'Data not found',
+            'data'=>null
+        ], 400, );
     }
 
-     $device=Technicaldetails::where('client_code',$user->id)->select('device_id')->first();
+     $device=Technicaldetails::where('client_code',$user->id)->select('device_id','technician_name')->first();
      $lastComplaint = Removal::latest()->first();
      $lastComplaintId = $lastComplaint ? $lastComplaint->id + 1 : 1;
 
      if ($user) {
          // If a user is found, you can pass the user data to the view
-         return view('removal', compact('user','lastComplaintId','device'));
+        //  return view('removal', compact('user','lastComplaintId','device'));
+        return response()->json([
+            'success'=>true,
+            'message'=>'Data found successfully',
+            'user'=>$user,
+            'removal_id'=>$lastComplaintId,
+            'device'=>$device
+        ], 200, );
      }
 }
 
@@ -3144,5 +3215,73 @@ else{
     ], 200, );
 }
 
+}
+public static function test_api(Request $request){
+    $validator=Validator::make($request->all(),[
+        'reg_no'=>'required',
+        'eng_no'=>'required',
+        'chasis_no'=>'required'
+    ]);
+    if($validator->fails()){
+        return response()->json([
+            'success'=>false,
+            'message'=>$validator->errors(),
+        ], 200, );
+    }
+        $data=[
+            'reg_no'=>$request->reg_no,
+        'eng_no'=>$request->reg_no,
+        'chasis_no'=>$request->reg_no,
+        ];
+       $test= DB::table('test')->insert($data);
+if($test){
+    return response()->json([
+        'success'=>true,
+        'message'=>'data submitted successfully',
+        'data'=>$data
+    ], 200, );
+}
+else{
+  
+        return response()->json([
+            'suucess'=>false,
+            'message'=>'internal server error',
+            'data'=>null
+        ], 200, );
+
+}
+       }
+       public function service_order_form(Request $request){
+        $validator=Validator::make($request->all(),[
+            'search_term'=>'required'
+        ]);
+        if($validator->fails()){
+            return response()->json([
+                'success'=>false,
+                'message'=>$validator->errors()
+            ], 200, );
+        }
+        $input=$request->search_term;
+        $user=User::where('registeration_no',$input)
+        ->orWhere('customer_name','LIKE','%'.$input.'%')
+        ->orWhere('engine_no',$input)
+        ->orWhere('chasis_no',$input)
+        ->orderBy('created_at','desc')
+        ->first();
+       
+       if($user){
+        return response()->json([
+            'success'=>true,
+            'message'=>'Details fetched successfully',
+            'data'=>$user,
+        ], 200, );
+       }
+       else{
+        return response()->json([
+            'success'=>'error',
+            'message'=>'Internal server error',
+            'data'=>null
+        ], 200, );
+       }
 }
 }
