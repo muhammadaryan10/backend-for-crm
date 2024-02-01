@@ -45,7 +45,7 @@ Route::get('securityalert', [userController::class, 'securityalert'])->name('sec
 // Route::get('user2/{id}', [userController::class, 'technical'])->name('user2');
 
  Route::get('show', [userController::class, 'show'])->name('show');
- Route::get('alert', [userController::class, 'alert'])->name('alert');
+//  Route::get('alert', [userController::class, 'alert'])->name('alert');
 
 Route::get('delete/{id}', [userController::class, 'delete'])->name('delete');
 // Route::get('edit/{id}', [userController::class, 'edit'])->name('edit');
@@ -59,7 +59,7 @@ Route::get('/removalform', [userController::class, 'removalForm'])->name('remova
 
 Route::get('/logout', [userController::class, 'logout'])->name('logout');
 // Route::post('/storedata', [userController::class,  'storedata'])->name('storedata');
-Route::post('/storetechnical', [userController::class,  'technical_details'])->name('storetechnical');
+// Route::post('/storetechnical', [userController::class,  'technical_details'])->name('storetechnical');
 Route::post('/storesecurity', [userController::class,  'securitydetails']);
 Route::post('/storeinventory', [userController::class, 'create_deviceinventory'])->name('storeinventory');
 Route::any('/complain_actions', [userController::class,  'action_complain'])->name('complain.actions');

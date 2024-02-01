@@ -69,3 +69,5 @@ Route::post('/createremoval', [userController::class, 'create_removal'])->name('
 Route::get('edit/{reg_no}', [userController::class, 'edit'])->name('edit/{reg_no}');
 Route::post('test_api', [userController::class, 'test_api'])->name('test_api');
 Route::post('service_order_form', [userController::class, 'service_order_form'])->name('service_order_form');
+Route::get('technical_alert', [userController::class, 'technical_alert'])->name('technical_alert');
+Route::post('/technical_create', [userController::class,  'technical_create'])->name('technical_create');

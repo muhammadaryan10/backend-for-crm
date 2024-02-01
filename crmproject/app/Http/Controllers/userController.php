@@ -172,7 +172,7 @@ class userController extends Controller
             $data->fill($validatedData); // Fill the model with validated data
     
             // Other fields
-            $data->form_status = 'declined';
+            $data->form_status = 'completed';
             $data->save();
     
             $createdDate = $data->created_at instanceof Carbon ? $data->created_at : new Carbon($data->created_at);
@@ -269,11 +269,19 @@ class userController extends Controller
         return view('securityalert',compact('data'));
       }
 
-      public function alert()
+      public function technical_alert()
       {
-           $data =User::where('form_status','declined')->get(); // Replace 'Notification' with your model name.
-            // return ($data);
-         return view('alert', ['data' => $data]);
+           $data =User::where('form_status','completed')
+           ->orderBy('created_at','desc')
+           ->get(); 
+           $count=$data->count();
+        //  return view('alert', ['data' => $data]);
+        return response()->json([
+            'success'=>true,
+            'message'=>'details fetched successfully',
+            'count'=>$count,
+            'data'=>$data
+        ], 200, );
         }
         public function furtherdetails($id){
             $data=User::find($id);
@@ -291,36 +299,59 @@ class userController extends Controller
           }
 
 
-  public function technical_details(Request $request){
-    // $validator = Validator::make($request->all(), [
-    //     'vendor_name' => 'required',
-    //     'device_id' => 'required',
-    //     'IMEI_no' => 'required',
-    //     'Gsm_no' => 'required',
-    //     'Tavl_mang_id' => 'required',
-    //     'technician_name' => 'required',
-    //     'sim' => 'required',
-    //     'Gps_check' => 'required',
-    //     'mobilizer' => 'required',
-    //     'operational_status' => 'required',
-    //     'webtrack_id' => 'required',
-    //     'webtrack_pass' => 'required|min:6', // Example: minimum length of 6 characters
-    //     'ignition_alerts' => 'required',
-    //     'overspeed_alerts' => 'required',
-    //     'geo_fence_alerts' => 'required',
-    //     'additional_contact' => 'required',
-    //     'contact_1' => 'required',
-    //     'contact_2' => 'required',
-    //     'contact_3' => 'required',
-    // ]);
+  public function technical_create(Request $request){
+    $validator = Validator::make($request->all(), [
+        'client_code'=>'required',
+        'vendor_name' => 'required',
+        'device_id' => 'required',
+        'IMEI_no' => 'required',
+        'Gsm_no' => 'required',
+        'Tavl_mang_id' => 'required',
+        'technician_name' => 'required',
+        'sim' => 'required',
+        'Gps_check' => 'required',
+        'mobilizer' => 'required',
+        'operational_status' => 'required',
+        'webtrack_id' => 'required',
+        'webtrack_pass' => 'required|min:6', // Example: minimum length of 6 characters
+        'ignition_alerts' => 'required',
+        'overspeed_alerts' => 'required',
+        'geo_fence_alerts' => 'required',
+        'additional_contact' => 'required',
+        'contact_1' => 'required',
+        'contact_2' => 'nullable',
+        'contact_3' => 'nullable',
+    ]);
 
-    // if ($validator->fails()) {
-    //     return back()->withErrors($validator)->withInput();
-    // }
+    if ($validator->fails()) {
+     return response()->json([
+        'success'=>false,
+        'message'=>$validator->errors(),
+        'data'=>null
+     ], 200, );
+        // return back()->withErrors($validator)->withInput();
+    }
 
   $value= new Technicaldetails();
   $client_value = User::where('id', $request->client_code)->first();
-$device=Deviceinventory::where('device_serialno',$request->input('device_id'))->select('id')->first();
+  $device = Deviceinventory::where('device_serialno', $request->input('device_id'))->select('id', 'status')->first();
+
+  if (!$device) {
+      return response()->json([
+          'success' => false,
+          'message' => 'Device not found',
+          'data' => null
+      ], 200);
+  }
+  
+  if ($device->status == 'inactive') {
+      return response()->json([
+          'success' => false,
+          'message' => 'Device is already installed',
+          'data' => null
+      ], 200);
+  }
+  
  $device->update(['status' => 'inactive']);
 if ($client_value && $device) {
     $value->client_code = $client_value->id;
@@ -347,13 +378,26 @@ if ($client_value && $device) {
   $value->contact_2=$request->input('contact_2');
   $value->contact_3=$request->input('contact_3');
   $value->tracker_status='active';
-  $value->save();
-  if($value){
-    User::where('id', $value->client_code)->update(['form_status'=>'pending']);
+  $value->technical_status='completed';
+  $technical=$value->save();
+  if(!$technical){
+    // User::where('id', $value->client_code)->update(['form_status'=>'pending']);
+    return response()->json([
+        'success'=>false,
+        'message'=>'error in submission',
+        'data'=>null
+    ], 200, );
   }
 
-  return redirect()->route('alert');
+//   return redirect()->route('alert');
+return response()->json([
+    'success'=>true,
+    'messsage'=>'Technical data created successfully',
+    'data'=>$value
+], 200, );
+
   }
+
   public function securitydetails(Request $request){
     $value= new secutitydetails();
     $client_value=User::where('id',$request->client_code)->first();
@@ -1184,8 +1228,13 @@ public function datalogs($search_term){
 } else {
     $reg_no = null; // Set a default value if there are no complaints
 }
-   return view('datalogs', compact('datalogs','reg_no'));
- }
+//    return view('datalogs', compact('datalogs','reg_no'));
+return response()->json([
+    'success'=>true,
+    'message'=>'detail fetched successfully',
+    'datalogs'=>$datalogs,
+    'reg_no'=>$reg_no
+], 200, ); }
  public function view_employees(Request $request){
     return view('totalemployees');
  }
