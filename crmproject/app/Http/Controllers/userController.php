@@ -241,7 +241,8 @@ class userController extends Controller
         }
         $data_1 = Technicaldetails::where('client_code', $data->id)->first();
         $data_2 = secutitydetails::where('client_code', $data->id)->first();
-        $vas = explode(', ', $data->vas_options);
+        $device=Deviceinventory::where('id',$data_1->device_no )->first();
+        // $vas = explode(', ', $data->vas_options);
 
    return response()->json([
     'success'=>true,
@@ -249,7 +250,7 @@ class userController extends Controller
     'user'=>$data,
     'technical'=>$data_1,
     'security'=>$data_2,
-    'vas'=>$vas
+    'device_information'=>$device
 
    ], 200, );
     }
@@ -265,8 +266,15 @@ class userController extends Controller
         return view('technicalregisteration');
       }
       public function securityalert(){
-        $data =User::where('form_status','pending')->get();
-        return view('securityalert',compact('data'));
+        $data =Technicaldetails::where('technical_status','completed')
+        ->orderBy('created_at','desc')
+        ->get();
+        // return view('securityalert',compact('data'));
+        return response()->json([
+            'success'=>true,
+            'message'=>'Details fetcehd successfully',
+            'data'=>$data
+          ], 200, );
       }
 
       public function technical_alert()
@@ -398,28 +406,64 @@ return response()->json([
 
   }
 
-  public function securitydetails(Request $request){
-    $value= new secutitydetails();
-    $client_value=User::where('id',$request->client_code)->first();
-    if($client_value){
-        $value->client_code=$client_value->id;
+  public function security_create(Request $request){
+    // Define validation rules for each input field
+    $validator = Validator::make($request->all(), [
+        'customer_email' => 'required|email',
+        'emergency_pass' => 'required',
+        'emergency_person' => 'nullable',
+        'security_ques' => 'required',
+        'security_ans' => 'required',
+        'password' => 'required', // Example rule for password, adjust as needed
+        'emergency_person_contact' => 'nullable',
+        'client_code' => 'required|exists:users,id', // Assuming client_code should exist in users table
+    ]);
+
+    // Check if validation fails
+    if ($validator->fails()) {
+        // 
+        return response()->json([
+            'success'=>false,
+            'message'=>$validator->errors()
+        ], 200, );
+
     }
-    $value->customer_email=$request->input('customer_email');
-    $value->emergency_pass=$request->input('emergency_pass');
-    $value->emergency_person=$request->input('emergency_person');
-    $value->security_ques=$request->input('security_ques');
-    $value->security_ans=$request->input('security_ans');
-    $value->password=Hash::make($request->input('password'));
-    $value->emergency_person_contact=$request->input('emergency_person_contact');
+
+    
+    $value = new secutitydetails();
+    $client_value = User::where('id', $request->client_code)->first();
+    if ($client_value) {
+        $value->client_code = $client_value->id;
+    }
+    $value->customer_email = $request->input('customer_email');
+    $value->emergency_pass = $request->input('emergency_pass');
+    $value->emergency_person = $request->input('emergency_person');
+    $value->security_ques = $request->input('security_ques');
+    $value->security_ans = $request->input('security_ans');
+    $value->password = Hash::make($request->input('password'));
+    $value->emergency_person_contact = $request->input('emergency_person_contact');
+    $value->security_status="completed";
     $value->save();
-    if($value){
-        User::where('id',$value->client_code)->update(['form_status'=>'approved']);
+    
+    if ($value) {
+        return response()->json([
+            'success'=>true,
+            'message'=>'Security details submitted successfully',
+            'data'=>$value
+        ], 200, );
     }
-    return redirect()->route('securityalert');
+    else{
+        return response()->json([
+            'success'=>false,
+            'message'=>'error in submission',
+            'data'=>null
+        ], 200, ); 
+    }
+    
+    // return redirect()->route('securityalert');
 
+}
 
-
-  }
   public function update_details(Request $request,$id){
     $customer=User::find($id);
      if($customer){
