@@ -40,7 +40,7 @@ Route::get('further/{id}', [userController::class, 'furtherdetails'])->name('fur
 
 Route::get('technical', [userController::class, 'technicalregisteration'])->name('technical');
 Route::get('securityform/{id}', [userController::class, 'securityform'])->name('securityform');
-Route::get('securityalert', [userController::class, 'securityalert'])->name('securityalert');
+// Route::get('securityalert', [userController::class, 'securityalert'])->name('securityalert');
 
 // Route::get('user2/{id}', [userController::class, 'technical'])->name('user2');
 

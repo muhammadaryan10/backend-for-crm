@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('security_ans');
             $table->string('password');
             $table->string('emergency_person_contact');
+            $table->string('security_status')->nullable();
             $table->timestamps();
         });
     }
