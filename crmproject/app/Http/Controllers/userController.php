@@ -143,7 +143,7 @@ class userController extends Controller
             'vas' => 'required', // Assuming this is a required field
             'vas_options' => 'nullable',
             'segment' => 'nullable',
-            'demo_duration' => 'required', // Assuming this is a required field
+            'demo_duration' => 'nullable', // Assuming this is a required field
             'tracker_charges' => 'required',
             'date_of_installation' => 'required',
             'int_comission' => 'required',
@@ -3315,7 +3315,7 @@ else{
             return response()->json([
                 'success'=>false,
                 'message'=>$validator->errors()
-            ], 200, );
+            ], 420, );
         }
         $input=$request->search_term;
         $user=User::where('registeration_no',$input)
@@ -3335,9 +3335,9 @@ else{
        else{
         return response()->json([
             'success'=>'error',
-            'message'=>'Internal server error',
+            'message'=>'Data Not Found ',
             'data'=>null
-        ], 200, );
+        ], 402, );
        }
 }
 }
